@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>旅行攻略地图</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav-title">旅行攻略地图</div>
+    <nav class="nav-btns">
+      <button class="nav-btn active" data-nav="input">导入攻略</button>
+      <button class="nav-btn" data-nav="trips">我的行程</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ============ 输入视图 ============ -->
+    <section id="view-input" class="view">
+      <div class="hero">
+        <h1>看攻略，不再靠脑补</h1>
+        <p>把旅行攻略放进来，直接在地图上看别人怎么玩</p>
+      </div>
+      <div class="input-card">
+        <textarea id="guide-input" spellcheck="false"
+          placeholder="粘贴旅行攻略文字，或直接粘贴小红书 / 抖音 / 网页链接……&#10;&#10;例如：Day1 早上先去浅草寺，然后坐地铁去上野，下午逛秋叶原，晚上去银座……"></textarea>
+        <div class="input-actions">
+          <button id="btn-sample" class="btn-ghost">填充示例攻略</button>
+          <button id="btn-generate" class="btn-primary">生成地图</button>
+        </div>
+      </div>
+      <div id="model-status" class="model-status"><span class="dot"></span>正在检查模型连接……</div>
+    </section>
+
+    <!-- ============ 解析中视图 ============ -->
+    <section id="view-loading" class="view hidden">
+      <div class="loading-card">
+        <div class="loading-title">正在阅读攻略……</div>
+        <ul id="stage-list" class="stage-list"></ul>
+      </div>
+    </section>
+
+    <!-- ============ 结果视图（左右分屏） ============ -->
+    <section id="view-result" class="view hidden">
+      <div class="result-header">
+        <div class="result-title">
+          <h2 id="trip-title">未命名行程</h2>
+          <span id="trip-city" class="trip-city"></span>
+        </div>
+        <div class="result-toolbar">
+          <div id="hotel-chip" class="hotel-chip" title="点击设置酒店（每天路线的出发点）">⌂ 设置酒店</div>
+          <div id="pace-chip" class="hotel-chip" title="行程节奏：出发/结束时间与饭点">◐ 节奏</div>
+          <div id="mode-toggle" class="mode-toggle">
+            <button data-mode="original" class="active">原序</button>
+            <button data-mode="optimize">智能优化</button>
+          </div>
+          <div id="day-tabs" class="day-tabs"></div>
+          <button id="btn-export" class="btn-ghost">导出</button>
+          <button id="btn-save-trip" class="btn-primary">保存为我的行程</button>
+        </div>
+      </div>
+      <!-- 挪动建议条（「太满」开方） -->
+      <div id="suggest-box" class="suggest-box"></div>
+      <div class="split">
+        <div class="panel-guide" id="panel-guide"></div>
+        <div class="panel-map" id="panel-map"></div>
+      </div>
+      <!-- 酒店搜索浮层 -->
+      <div id="hotel-panel" class="hotel-panel">
+        <div class="hp-row">
+          <input id="hotel-search-input" type="text" placeholder="输入酒店名称，如：金陵饭店" spellcheck="false">
+          <button id="hotel-search-btn" class="btn-primary">搜索</button>
+          <button id="hotel-clear-btn" class="btn-ghost" title="清除酒店">✕</button>
+        </div>
+        <div id="hotel-results" class="hp-results"></div>
+      </div>
+      <!-- 地点选择器浮层（添加/替换地点，接高德真实定位） -->
+      <div id="loc-picker-panel" class="hotel-panel">
+        <div class="hp-row">
+          <input id="loc-picker-input" type="text" placeholder="输入地点名称搜索，如：先锋书店" spellcheck="false">
+          <button id="loc-picker-search-btn" class="btn-primary">搜索</button>
+        </div>
+        <div id="loc-picker-results" class="hp-results"></div>
+      </div>
+      <!-- 节奏设置浮层 -->
+      <div id="pace-panel" class="hotel-panel pace-panel">
+        <div class="pace-row"><span>出发时间</span><input id="pace-start" type="time"></div>
+        <div class="pace-row"><span>结束时间</span><input id="pace-end" type="time"></div>
+        <div class="pace-row"><span>午餐时间</span><input id="pace-lunch" type="time"></div>
+        <div class="pace-row"><span>晚餐时间</span><input id="pace-dinner" type="time"></div>
+        <div class="pace-row"><span>午餐用时</span><input id="pace-lunch-min" type="number" min="15" max="240" step="15"> 分钟</div>
+        <div class="pace-row"><span>晚餐用时</span><input id="pace-dinner-min" type="number" min="15" max="240" step="15"> 分钟</div>
+        <div class="hp-row">
+          <span class="pace-tip">改完整个行程重算时刻表，只影响这个行程</span>
+          <button id="pace-save-btn" class="btn-primary">应用</button>
+          <button id="pace-reset-btn" class="btn-ghost">恢复默认</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 我的行程列表 ============ -->
+    <section id="view-trips" class="view hidden">
+      <div class="page-card">
+        <h2>我的行程</h2>
+        <div id="trip-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="js/app.js?v=16"></script>
+</body>
+</html>
