@@ -65,9 +65,12 @@
 | `ai.baseURL` | Ollama 服务地址，默认 `http://127.0.0.1:11434/v1` |
 | `amap.key` / `amap.securityJsCode` / `amap.webKey` | 高德开放平台（[console.amap.com](https://console.amap.com)）申请的 Key；留空时自动降级为示意图模式 |
 
+**本地私有配置**：真实 Key 请勿直接填入 `js/config.js`（该文件随仓库分发）。复制 `js/config.local.example.js` 为 `js/config.local.js`，在其中填入自己的 Key —— 该文件已被 `.gitignore` 忽略，只存本机、不入库，`js/config.js` 会自动合并它。
+
 **安全提示**
 
 - 请勿将任何真实 Key、Cookie 提交到仓库。`server/asr/ttwid.txt`（抖音访客 Cookie）由抓取服务在运行时自动生成并缓存，已被 `.gitignore` 忽略。
+- 高德 JS API Key 建议在控制台配置**域名白名单**（`localhost` 与你的部署域名），这是该类型 Key 的主要防盗用手段。
 
 ## 开源许可
 

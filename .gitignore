@@ -4,6 +4,9 @@ server/asr/models/sensevoice-small-f16.gguf
 # 敏感凭据：抖音访客 cookie（运行时自动生成，勿提交）
 server/asr/ttwid.txt
 
+# 本地私有配置：真实 Key 只存本机，不入库
+js/config.local.js
+
 # 运行时缓存与编译产物
 server/asr/cache/
 __pycache__/
