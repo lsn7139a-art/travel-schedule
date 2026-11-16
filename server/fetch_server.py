@@ -121,17 +121,23 @@ def get_ttwid(force=False):
         except OSError:
             pass
     body = json.dumps({
-        "region": "cn", "aid": 6383, "needFid": False, "service": "www.douyin.com",
-        "migrate_info": {"ticket": "", "source": "node"},
+        "region": "cn", "aid": 6383, "needFid": "false",
+        "service": "www.douyin.com", "migrate_priority_method": True,
         "cbUrlProtocol": "https", "union": True
     }).encode()
     req = Request("https://ttwid.bytedance.com/ttwid/union/register/", data=body,
-                  headers={"Content-Type": "application/json", "User-Agent": UA_PC})
+                  headers={"Content-Type": "application/json;charset=UTF-8",
+                           "User-Agent": UA_PC, "Origin": "https://www.douyin.com",
+                           "Referer": "https://www.douyin.com/"})
     with urlopen(req, timeout=15) as r:
-        m = re.search(r"ttwid=([^;]+)", (r.headers.get_all("Set-Cookie") or [""])[0])
-        if not m:
+        val = ""
+        for c in r.headers.get_all("Set-Cookie") or []:
+            m = re.search(r"ttwid=([^;]+)", c)
+            if m:
+                val = m.group(1)
+                break
+        if not val:
             raise RuntimeError("ttwid 获取失败")
-        val = m.group(1)
     os.makedirs(ASR_DIR, exist_ok=True)
     with open(TTWID_FILE, "w", encoding="utf-8") as f:
         f.write(val)
@@ -160,13 +166,23 @@ def transcribe_audio(mp3_path):
 
 
 def fetch_douyin_video(final_url):
-    """抖音视频：文案 + 原声语音转写。返回 (text, src) 或抛异常"""
+    """抖音视频：文案 + 原声语音转写。返回 (text, src) 或抛异常
+    缓存优先：已转写过的视频直接返回，不再请求抖音接口（其匿名接口随时可能被风控）"""
     m = re.search(r"/video/(\d+)", final_url)
     if not m:
         raise RuntimeError("无法从抖音链接解析视频ID")
     video_id = m.group(1)
 
-    # 1) 拿视频详情（ttwid 失效/风控 403 时换新 cookie 重试）
+    # 1) 转写缓存优先（新版缓存为「转写+文案」最终文本；旧版纯转写同样兼容）
+    os.makedirs(ASR_CACHE_DIR, exist_ok=True)
+    cache = os.path.join(ASR_CACHE_DIR, f"{video_id}.txt")
+    if os.path.exists(cache):
+        with open(cache, encoding="utf-8") as f:
+            cached = f.read().strip()
+        if len(cached) >= 30:
+            return cached, "抖音视频（缓存）"
+
+    # 2) 拿视频详情（匿名接口可能被风控 403）
     detail = {}
     last_err = None
     for attempt in range(3):
@@ -178,38 +194,31 @@ def fetch_douyin_video(final_url):
             last_err = e
             time.sleep(1.5 * (attempt + 1))
     if not detail:
-        raise RuntimeError(f"抖音视频信息获取失败：{last_err or '无数据'}")
+        raise RuntimeError(
+            f"抖音已加强匿名风控，此视频此前未转写过、暂时无法自动解析（{last_err}）。"
+            "可打开视频复制文案后直接粘贴到输入框，其他功能不受影响")
 
     caption = (detail.get("caption") or detail.get("desc") or "").strip()
-    duration_ms = (detail.get("video") or {}).get("duration") or 0
 
-    # 2) 下载原声（mp3）→ 转写（结果按视频ID缓存）
-    os.makedirs(ASR_CACHE_DIR, exist_ok=True)
-    cache = os.path.join(ASR_CACHE_DIR, f"{video_id}.txt")
-    if os.path.exists(cache):
-        with open(cache, encoding="utf-8") as f:
-            transcript = f.read().strip()
-    else:
-        music_urls = ((detail.get("music") or {}).get("play_url") or {}).get("url_list") or []
-        if not music_urls:
-            raise RuntimeError("视频没有可用的原声音频")
-        req = Request(music_urls[0], headers={"User-Agent": UA_PC, "Referer": "https://www.douyin.com/"})
-        with urlopen(req, timeout=120) as r:
-            audio = r.read()
-        if len(audio) < 4096:
-            raise RuntimeError("原声下载失败")
-        tmp_mp3 = os.path.join(ASR_CACHE_DIR, f"{video_id}.mp3")
-        with open(tmp_mp3, "wb") as f:
-            f.write(audio)
+    # 3) 下载原声（mp3）→ 本地转写 → 缓存最终文本
+    music_urls = ((detail.get("music") or {}).get("play_url") or {}).get("url_list") or []
+    if not music_urls:
+        raise RuntimeError("视频没有可用的原声音频")
+    req = Request(music_urls[0], headers={"User-Agent": UA_PC, "Referer": "https://www.douyin.com/"})
+    with urlopen(req, timeout=120) as r:
+        audio = r.read()
+    if len(audio) < 4096:
+        raise RuntimeError("原声下载失败")
+    tmp_mp3 = os.path.join(ASR_CACHE_DIR, f"{video_id}.mp3")
+    with open(tmp_mp3, "wb") as f:
+        f.write(audio)
+    try:
+        transcript = transcribe_audio(tmp_mp3)
+    finally:
         try:
-            transcript = transcribe_audio(tmp_mp3)
-        finally:
-            try:
-                os.remove(tmp_mp3)
-            except OSError:
-                pass
-        with open(cache, "w", encoding="utf-8") as f:
-            f.write(transcript)
+            os.remove(tmp_mp3)
+        except OSError:
+            pass
 
     parts = []
     if transcript:
@@ -219,6 +228,8 @@ def fetch_douyin_video(final_url):
     text = "\n\n".join(parts)
     if len(text) < 30:
         raise RuntimeError("视频没有解析出可用内容")
+    with open(cache, "w", encoding="utf-8") as f:
+        f.write(text)
     return text, "抖音视频"
 
 

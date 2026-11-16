@@ -56,12 +56,16 @@ function toast(msg, isError = false) {
 /* ==================== 模型连接状态 ==================== */
 (async () => {
   const el = $('#model-status');
-  try {
-    const r = await fetch(config.ai.baseURL + '/models');
-    if (!r.ok) throw 0;
-    el.innerHTML = `<span class="dot ok"></span>${config.ai.model} · Ollama 已连接`;
-  } catch {
-    el.innerHTML = `<span class="dot bad"></span>Ollama 未连接 · 请先运行 ollama serve`;
+  while (true) {
+    try {
+      const r = await fetch(config.ai.baseURL + '/models');
+      if (!r.ok) throw 0;
+      el.innerHTML = `<span class="dot ok"></span>${config.ai.model} · Ollama 已连接`;
+      return;
+    } catch {
+      el.innerHTML = `<span class="dot bad"></span>Ollama 未连接 · 正在自动重连（可用 启动.bat 启动）`;
+      await new Promise(res => setTimeout(res, 8000));
+    }
   }
 })();
 

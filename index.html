@@ -3,13 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f5f7">
   <title>旅行攻略地图</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Cpath d='M32 12c-8.8 0-16 7.2-16 16 0 12 16 24 16 24s16-12 16-24c0-8.8-7.2-16-16-16z' fill='white'/%3E%3Ccircle cx='32' cy='28' r='6' fill='%230071e3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 
   <header class="nav">
-    <div class="nav-title">旅行攻略地图</div>
+    <div class="nav-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1.8A5.2 5.2 0 0 0 2.8 7c0 3.8 5.2 7.2 5.2 7.2s5.2-3.4 5.2-7.2A5.2 5.2 0 0 0 8 1.8Z" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="8" cy="7" r="1.7" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="nav-title">旅行攻略地图</span>
+    </div>
     <nav class="nav-btns">
       <button class="nav-btn active" data-nav="input">导入攻略</button>
       <button class="nav-btn" data-nav="trips">我的行程</button>
@@ -21,6 +31,7 @@
     <!-- ============ 输入视图 ============ -->
     <section id="view-input" class="view">
       <div class="hero">
+        <p class="eyebrow">AI TRIP PLANNER</p>
         <h1>看攻略，不再靠脑补</h1>
         <p>把旅行攻略放进来，直接在地图上看别人怎么玩</p>
       </div>
@@ -113,6 +124,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="js/app.js?v=16"></script>
+  <script type="module" src="js/app.js?v=18"></script>
 </body>
 </html>

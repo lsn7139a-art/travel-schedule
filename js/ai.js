@@ -74,9 +74,21 @@ function extractJSON(text) {
   const start = body.indexOf('{');
   const end = body.lastIndexOf('}');
   if (start === -1 || end === -1) throw new Error('EMPTY_JSON');
+  const json = body.slice(start, end + 1);
   try {
-    return JSON.parse(body.slice(start, end + 1));
+    return JSON.parse(json);
   } catch {
-    throw new Error('BAD_JSON');
+    try {
+      return JSON.parse(repairJSON(json));
+    } catch {
+      throw new Error('BAD_JSON');
+    }
   }
+}
+
+/* 修复模型偶发的 JSON 错字（云端模型会吐出 "lat": 35.671 own 这类数字带字母） */
+function repairJSON(s) {
+  return s
+    .replace(/(:\s*-?\d+(?:\.\d+)?)\s*[A-Za-z\u4e00-\u9fff]+/g, '$1')
+    .replace(/,\s*([}\]])/g, '$1');
 }
